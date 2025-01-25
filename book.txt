@@ -1,0 +1,84 @@
+#Import necessary modules
+import folium
+import pandas as pd
+import numpy
+import matplotlib.pyplot as plt
+import seaborn as sns
+from google.colab import files
+
+uploaded = files.upload()
+
+df = pd.read_csv('Dataset-RR.csv')
+
+df.head()
+
+df.shape
+
+df.isnull().sum()
+
+df.describe()
+
+df.info()
+
+# Required Columns
+col = ['Latitude','Longitude','Locality','Aggregate rating','Cuisines','Price range', 'Restaurant Name']
+
+# Keep only the required columns
+df = df[col]
+
+# print the required columns
+print("The necessary columns:\n", df.columns)
+
+# Drop the missing values
+df.dropna(inplace=True)
+
+df.isnull().sum()
+
+
+# Create a map centered around a general area
+latitude, longitude = df['Latitude'].mean(), df['Longitude'].mean()
+restaurant_map = folium.Map(location=[latitude, longitude], zoom_start=12)
+
+# Add restaurant Markers
+for _, row in df.iterrows():
+    folium.Marker(
+        [row['Latitude'], row['Longitude']],
+        popup=row['Restaurant Name']
+    ).add_to(restaurant_map)
+
+# Display the map
+restaurant_map
+
+#Group by Locality
+locality_counts = df['Locality'].value_counts()
+
+# Plot
+plt.figure(figsize=(12, 6))
+sns.barplot(x=locality_counts.index[:20], y=locality_counts.values[:20], palette="viridis")
+plt.title('Top 10 Locality by Number of Restaurants')
+plt.xlabel("Locality")
+plt.ylabel("Number of Restaurants")
+plt.xticks(rotation=45)
+plt.show()
+
+# Average ratings by locality
+avg_rating = df.groupby('Locality')['Aggregate rating'].mean().sort_values(ascending=False)
+print("Average Ratings by Locality: \n", avg_rating.head(10))
+
+# Most Frequent Cuisines by Locality
+cuisines_by_locality = df.groupby('Locality')['Cuisines'].apply(lambda x: x.mode()[0])
+print("Most common Cuisines by Locality: \n", cuisines_by_locality.head(10))
+
+# Price range statistics by locality
+price_stats = df.groupby('Locality')['Price range'].describe()
+print("Price Range Statistics:\n", price_stats.head(10))
+
+# Correlation between ratings and price range
+correlation = df[['Aggregate rating', 'Price range']].corr()
+print('print correlation between Aggregate rating and Price range:\n',correlation)
+
+# High rated restaurants by Locality
+high_rated = df[df['Aggregate rating'] >=4.5].groupby('Locality')['Restaurant Name'].count()
+print("Localities with the Most High-rated Restaurants:\n", high_rated.sort_values(ascending=False,).head())
+
+

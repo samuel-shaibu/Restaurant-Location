@@ -13,7 +13,7 @@ install:
 #Lint the code
 lint:
 		jupyter nbconvert --to script book.ipynb
-		pylint --disable=R,C,E1123,W0104 book.py
+		pylint --disable=R,C,E1123,W0104,E0602 book.ipynb
 		rm -f book.py
 
 #Format Code
